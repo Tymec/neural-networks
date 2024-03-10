@@ -9,6 +9,8 @@ matplotlib = "*"
 
 [dev-packages]
 ipykernel = "*"
+ipywidgets = "*"
+import-ipynb = "*"
 
 [requires]
 python_version = "3.11"

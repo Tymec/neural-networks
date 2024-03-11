@@ -32,15 +32,3 @@ def plot_function(
         ax.set_xlabel(label)
 
     return ax
-
-
-def decision_boundary(X: list, y: list, fn: Callable) -> tuple[list, list, list]:
-    x = np.linspace(-1, 1, 100)
-    y = np.linspace(-1, 1, 100)
-    X, Y = np.meshgrid(x, y)
-    Z = np.zeros(X.shape)
-    for i in range(X.shape[0]):
-        for j in range(X.shape[1]):
-            Z[i, j] = fn([X[i, j], Y[i, j]])
-
-    return X, Y, Z

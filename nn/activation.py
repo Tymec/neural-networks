@@ -1,83 +1,47 @@
 """Activation functions"""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 import numpy.typing as npt
 
 
-class Activation0D(ABC):
-    def __init__(self):
-        pass
+class Activation(ABC):
+    @abstractmethod
+    def f(self, x: npt.ArrayLike) -> npt.ArrayLike: ...
 
-    def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        raise NotImplementedError
-
-    def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        raise NotImplementedError
+    @abstractmethod
+    def df(self, x: npt.ArrayLike) -> npt.ArrayLike: ...
 
 
-class Activation1D(Activation0D):
+class Activation1D(Activation):
     def __init__(self, alpha: float):
         self.alpha = alpha
 
 
-class Activation2D(Activation1D):
+class Activation2D(Activation):
     def __init__(self, alpha: float, beta: float):
         self.alpha = alpha
         self.beta = beta
 
 
-class ELU(Activation1D):
-    def __init__(self, alpha: float = 1.0):
-        super().__init__(alpha)
-
+class Identity(Activation):
     def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return x * (x > 0) + self.alpha * (np.exp(x) - 1) * (x <= 0)
+        return x
 
     def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return (x > 0) + self.alpha * np.exp(x) * (x <= 0)
+        return 1
 
 
-class Hardtanh(Activation2D):
-    def __init__(self, alpha: float = -1.0, beta: float = 1.0):
-        super().__init__(alpha, beta)
-
+class BinaryStep(Activation):
     def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return np.clip(x, self.alpha, self.beta)
+        return np.heaviside(x, 1)
 
     def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return (self.alpha <= x) * (x <= self.beta)
+        return 0
 
 
-class Hardshrink(Hardtanh):
-    def __init__(self, lambd: float = 0.5):
-        super().__init__(lambd, -lambd)
-
-    def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return np.clip(x, self.alpha, self.beta)
-
-    def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return (self.alpha <= x) * (x <= self.beta)
-
-
-class Hardsigmoid(Activation0D):
-    def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return np.clip(x / 6 + 1 / 2, 0, 1)
-
-    def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return (0 <= x) * (x <= 1) / 6
-
-
-class ReLU(Activation0D):
-    def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return x * (x > 0)
-
-    def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return x > 0
-
-
-class Sigmoid(Activation0D):
+class Sigmoid(Activation):
     def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
         return 1 / (1 + np.exp(-x))
 
@@ -85,37 +49,36 @@ class Sigmoid(Activation0D):
         return x * (1 - x)
 
 
-class Tanh(Activation0D):
+class ReLU(Activation):
     def f(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return np.tanh(x)
+        return np.maximum(0.0, x)
 
     def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return 1 - x**2
+        return (x > 0).astype(int)
 
 
 """
-    ELU
-    Hardshrink
-    Hardsigmoid
-    Hardtanh
+ELU
+Hardshrink
+Hardsigmoid
+Hardtanh
 Hardswish
 LeakyReLU
 LogSigmoid
 MultiheadAttention
 PReLU (trainable)
-    ReLU
+ReLU
 ReLU6
 RReLU
 SELU
 CELU
 GELU
-    Sigmoid
 SiLU
 Mish
 Softplus
 Softshrink
 Softsign
-    Tanh
+Tanh
 Tanhshrink
 Threshold
 GLU

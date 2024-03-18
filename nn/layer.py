@@ -3,8 +3,8 @@
 import numpy as np
 import numpy.typing as npt
 
-from nn.activation import ReLU
-from nn.initializer import get_bias_initializer, get_weight_initializer
+from nn.activation import Activation, ReLU
+from nn.initializer import Initializer, get_bias_initializer, get_weight_initializer
 
 
 class Layer:
@@ -12,9 +12,9 @@ class Layer:
         self,
         in_size: int,
         out_size: int,
-        activation=ReLU(),
-        init_weights=None,
-        init_biases=None,
+        activation: Activation = ReLU(),
+        init_weights: Initializer = None,
+        init_biases: Initializer = None,
     ):
         self.activation = activation
 
@@ -23,14 +23,17 @@ class Layer:
         if init_biases is None:
             init_biases = get_bias_initializer(activation.__name__)
 
-        # Initialise weights and biases to random values
-        # self.weights = np.random.rand(out_size, in_size)
-        # self.biases = np.random.rand(1, out_size)[0]
+        # Initialise weights and biases
         self.weights = init_weights.f(out_size, in_size)
         self.biases = init_biases.f(1, out_size)[0]
 
+        # Cost gradients
         self.grad_weights = np.zeros(self.weights.shape)
         self.grad_biases = np.zeros(self.biases.shape)
+
+        # Velocities
+        self.vel_weights = np.zeros(self.weights.shape)
+        self.vel_biases = np.zeros(self.biases.shape)
 
     def __repr__(self):
         in_size = self.weights.shape[1]
@@ -56,15 +59,12 @@ class Layer:
         self.grad_biases += d_z
         return d_z
 
-    def apply_grads(self, lr: float) -> None:
-        # Update weights and biases
-        self.weights -= lr * self.grad_weights
-        self.biases -= lr * self.grad_biases
-
+    def reset_grads(self) -> None:
         # Reset gradients
         self.grad_weights = np.zeros(self.weights.shape)
         self.grad_biases = np.zeros(self.biases.shape)
 
+    def reset_cache(self) -> None:
         # Reset inputs and weighted inputs
         self.inputs = None
         self.z = None

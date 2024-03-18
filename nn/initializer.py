@@ -1,6 +1,6 @@
 """Initializers"""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Literal
 
@@ -32,12 +32,17 @@ class FanMode(Enum):
     OUT = "fan_out"
 
 
-class BaseRandom(ABC):
+class Initializer(ABC):
+    @abstractmethod
+    def __call__(self, shape: npt.Shape) -> np.ndarray: ...
+
+
+class BaseRandom(Initializer):
     def __init__(self, seed: int = 0):
         self.gen = default_rng(seed=seed)
 
 
-class Constant:
+class Constant(Initializer):
     def __init__(self, value: float = 0.0):
         self.value = value
 
@@ -131,7 +136,7 @@ class KaimingNormal(BaseRandom):
         return self.gen.normal(0, std, shape)
 
 
-def get_weight_initializer(activation: str):
+def get_weight_initializer(activation: str) -> Initializer:
     """Picks the appropriate initializer for the given activation function."""
     if activation in ("ReLU", "LeakyRelu"):
         return KaimingUniform(negative_slope=0.01, mode=FanMode.IN, nonlinearity=activation)
@@ -143,7 +148,7 @@ def get_weight_initializer(activation: str):
         return XavierUniform()
 
 
-def get_bias_initializer(activation: str):
+def get_bias_initializer(activation: str) -> Initializer:
     """Picks the appropriate initializer for the given activation function."""
     if activation in ("ReLU", "LeakyRelu"):
         return Constant(value=0.01)

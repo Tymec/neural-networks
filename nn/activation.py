@@ -46,7 +46,8 @@ class Sigmoid(Activation):
         return 1 / (1 + np.exp(-x))
 
     def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return x * (1 - x)
+        y = self.f(x)
+        return y * (1 - y)
 
 
 class ReLU(Activation):
@@ -54,7 +55,7 @@ class ReLU(Activation):
         return np.maximum(0.0, x)
 
     def df(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        return (x > 0).astype(int)
+        return (x > 0) * 1
 
 
 """

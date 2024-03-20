@@ -27,19 +27,16 @@ class Network:
         self.optimizer = optim
         self.scheduler = scheduler
 
-    def __repr__(self):
-        return f"Network(layers={self.layers}, loss={self.loss.__name__}, optim={self.optimizer.__name__}, scheduler={self.scheduler.__name__})"
-
     @staticmethod
     def _batch(
         X: npt.ArrayLike,
         Y: npt.ArrayLike,
         batch_size: int,
-        even: bool = False,
+        even: bool = True,
     ) -> tuple[npt.ArrayLike, npt.ArrayLike]:
         if even:
-            np.array_split(X, len(X) / batch_size)
-            np.array_split(Y, len(Y) / batch_size)
+            X = np.array_split(X, len(X) / batch_size)
+            Y = np.array_split(Y, len(Y) / batch_size)
             return X, Y  # Unnecessary since above functions split in place
 
         # Random

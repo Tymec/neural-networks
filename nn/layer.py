@@ -18,14 +18,15 @@ class Layer:
     ):
         self.activation = activation
 
+        activation_name = activation.__class__.__name__
         if init_weights is None:
-            init_weights = get_weight_initializer(activation.__name__)
+            init_weights = get_weight_initializer(activation_name)
         if init_biases is None:
-            init_biases = get_bias_initializer(activation.__name__)
+            init_biases = get_bias_initializer(activation_name)
 
         # Initialise weights and biases
-        self.weights = init_weights.f(out_size, in_size)
-        self.biases = init_biases.f(1, out_size)[0]
+        self.weights = init_weights((out_size, in_size))
+        self.biases = init_biases((1, out_size))[0]
 
         # Cost gradients
         self.grad_weights = np.zeros(self.weights.shape)
@@ -38,7 +39,7 @@ class Layer:
     def __repr__(self):
         in_size = self.weights.shape[1]
         out_size = self.weights.shape[0]
-        return f"Layer(in={in_size}, out={out_size}, activation={self.activation.__name__})"
+        return f"Layer(in={in_size}, out={out_size})"
 
     def forward(self, inputs: npt.ArrayLike, training: bool = False) -> npt.ArrayLike:
         # Calculate the weighted sum of inputs and add the bias

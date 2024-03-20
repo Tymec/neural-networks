@@ -34,7 +34,7 @@ class FanMode(Enum):
 
 class Initializer(ABC):
     @abstractmethod
-    def __call__(self, shape: npt.Shape) -> np.ndarray: ...
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike: ...
 
 
 class BaseRandom(Initializer):
@@ -46,17 +46,17 @@ class Constant(Initializer):
     def __init__(self, value: float = 0.0):
         self.value = value
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         return np.full(shape, self.value)
 
 
 class Zeros(Constant):
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         return np.zeros(shape)
 
 
 class Ones(Constant):
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         return np.ones(shape)
 
 
@@ -66,7 +66,7 @@ class RandomUniform(BaseRandom):
         self.minval = minval
         self.maxval = maxval
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         return self.gen.uniform(self.minval, self.maxval, shape)
 
 
@@ -76,7 +76,7 @@ class RandomNormal(BaseRandom):
         self.mean = mean
         self.std = std
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         return self.gen.normal(self.mean, self.std, shape)
 
 
@@ -85,7 +85,7 @@ class XavierUniform(BaseRandom):
         super().__init__(seed)
         self.gain = gain
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         limit = self.gain * np.sqrt(6 / (shape[0] + shape[1]))
         return self.gen.uniform(-limit, limit, shape)
 
@@ -95,7 +95,7 @@ class XavierNormal(BaseRandom):
         super().__init__(seed)
         self.gain = gain
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         std = self.gain * np.sqrt(2 / (shape[0] + shape[1]))
         return self.gen.normal(0, std, shape)
 
@@ -112,7 +112,7 @@ class KaimingUniform(BaseRandom):
         self.mode = mode
         self.gain = calculate_gain(nonlinearity, negative_slope)
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         fan = shape[0] if self.mode == FanMode.IN else shape[1]
         limit = self.gain * np.sqrt(6 / fan)
         return self.gen.uniform(-limit, limit, shape)
@@ -130,7 +130,7 @@ class KaimingNormal(BaseRandom):
         self.mode = mode
         self.gain = calculate_gain(nonlinearity, negative_slope)
 
-    def __call__(self, shape: npt.Shape) -> np.ndarray:
+    def __call__(self, shape: tuple[int, ...]) -> npt.ArrayLike:
         fan = shape[0] if self.mode == FanMode.IN else shape[1]
         std = self.gain * np.sqrt(2 / fan)
         return self.gen.normal(0, std, shape)

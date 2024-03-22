@@ -16,7 +16,7 @@ class Network:
     def __init__(
         self,
         layers: list[Layer],
-        loss: Loss = MeanSquaredError,
+        loss: Loss = MeanSquaredError(),
         optim: Optimizer = GradientDescent(),
         scheduler: Scheduler = StaticLR(),
     ):
@@ -43,7 +43,7 @@ class Network:
         indexes = np.random.randint(len(X), size=batch_size)
         return X[indexes, :], Y[indexes, :]
 
-    def update_grads(self, inputs: npt.ArrayLike, targets: npt.ArrayLike) -> float:
+    def update_grads(self, inputs: npt.ArrayLike, targets: npt.ArrayLike) -> npt.ArrayLike:
         # Forward pass
         predictions = self.forward(inputs, training=True)
 
@@ -75,9 +75,10 @@ class Network:
         X, Y = self._batch(input_data, target_data, batch_size=batch_size)
 
         iters = 0  # TODO: do something with this
-        loss = 0
+        losses = []
         for x, y in zip(X, Y):
-            loss += self.train_batch(x, y)
+            loss = self.train_batch(x, y)
+            losses.append(loss)
             iters += batch_size
 
         # Learning rate scheduling

@@ -7,23 +7,26 @@ import numpy.typing as npt
 
 
 class Loss(ABC):
-    @staticmethod
+    def __init__(self, mean: bool = True):
+        self.mean = mean
+
+    def __call__(self, y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> float:
+        cost = self.f(y_pred, y_true)
+        return np.mean(cost) if self.mean else np.sum(cost)
+
     @abstractmethod
-    def f(y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike: ...
+    def f(self, y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike: ...
 
-    @staticmethod
     @abstractmethod
-    def df(y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike: ...
+    def df(self, y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike: ...
 
 
-class MeanSquaredError:
-    @staticmethod
-    def f(y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike:
-        return np.mean((y_true - y_pred) ** 2)
+class MeanSquaredError(Loss):
+    def f(self, y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike:
+        return (y_true - y_pred) ** 2
 
-    @staticmethod
-    def df(y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike:
-        return y_pred - y_true
+    def df(self, y_pred: npt.ArrayLike, y_true: npt.ArrayLike) -> npt.ArrayLike:
+        return 2 * (y_pred - y_true)
 
 
 """

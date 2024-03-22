@@ -14,6 +14,9 @@ class Optimizer(ABC):
     def lr(self, learning_rate: float) -> None:
         self._lr = learning_rate
 
+    def __call__(self, layer: Layer) -> None:
+        self.apply(layer)
+
     @abstractmethod
     def apply(self, layer: Layer) -> None: ...
 
@@ -38,6 +41,7 @@ class GradientDescent(Optimizer):
 
 
 """
+    SGD
 Adadelta
 Adagrad
 Adam

@@ -1,5 +1,7 @@
 """Layer"""
 
+from abc import ABC, abstractmethod
+
 import numpy as np
 import numpy.typing as npt
 
@@ -7,7 +9,21 @@ from nn.activation import Activation, ReLU
 from nn.initializer import Initializer, get_bias_initializer, get_weight_initializer
 
 
-class Layer:
+class Layer(ABC):
+    @abstractmethod
+    def forward(self, inputs: npt.ArrayLike, training: bool = False) -> npt.ArrayLike: ...
+
+    @abstractmethod
+    def update_grads(self, dinputs: npt.ArrayLike) -> npt.ArrayLike: ...
+
+    @abstractmethod
+    def reset_grads(self) -> None: ...
+
+    @abstractmethod
+    def reset_cache(self) -> None: ...
+
+
+class Linear(Layer):
     def __init__(
         self,
         in_size: int,
@@ -18,11 +34,10 @@ class Layer:
     ):
         self.activation = activation
 
-        activation_name = activation.__class__.__name__
         if init_weights is None:
-            init_weights = get_weight_initializer(activation_name)
+            init_weights = get_weight_initializer(activation)
         if init_biases is None:
-            init_biases = get_bias_initializer(activation_name)
+            init_biases = get_bias_initializer(activation)
 
         # Initialise weights and biases
         self.weights = init_weights((out_size, in_size))
@@ -43,7 +58,8 @@ class Layer:
 
     def forward(self, inputs: npt.ArrayLike, training: bool = False) -> npt.ArrayLike:
         # Calculate the weighted sum of inputs and add the bias
-        z = np.dot(self.weights, inputs) + self.biases
+        # z = np.dot(self.weights, inputs) + self.biases
+        z = self.weights @ inputs + self.biases  # TODO: Requires more testing
 
         # Store inputs and weighted inputs for backpropagation
         if training:
@@ -54,10 +70,24 @@ class Layer:
         return self.activation.f(z)
 
     def update_grads(self, dinputs: npt.ArrayLike) -> npt.ArrayLike:
-        # Calculate the gradient of the loss with respect to the weighted sum
-        d_z = dinputs * self.activation.df(self.z)
-        self.grad_weights += np.dot(d_z[:, None], self.inputs[None, :])
+        d_z = self.activation.df(self.z) * dinputs
+
+        print(f"Z ({dinputs.shape}) = {dinputs}")
+        print(f"X ({self.inputs.shape}) = {self.inputs}")
+        print(f"dW ({self.activation.df(self.z).shape}) = {self.activation.df(self.z)}")
+        print(f"dZ ({d_z.shape}) = {d_z}")
+        print(f"grad_weights ({self.grad_weights.shape}) = {self.grad_weights}")
+
+        # Calculate gradients
+        self.grad_weights += np.outer(d_z, self.inputs)
         self.grad_biases += d_z
+
+        # DEBUG
+        # print(f"dA ({dinputs.shape}) = {dinputs}")
+        # print(f"weights ({self.weights.shape}) = {self.weights}")
+        # print(f"biases ({self.biases.shape}) = {self.biases}")
+        # print(f"grad_biases ({self.grad_biases.shape}) = {self.grad_biases}")
+
         return d_z
 
     def reset_grads(self) -> None:

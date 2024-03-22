@@ -4,6 +4,9 @@ from abc import ABC, abstractmethod
 
 
 class Scheduler(ABC):
+    def __call__(self, lr: float) -> float:
+        return self.get_lr(lr)
+
     @abstractmethod
     def get_lr(self, lr: float) -> float: ...
 
